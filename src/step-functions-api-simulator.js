@@ -41,14 +41,12 @@ module.exports = (serverless) => {
                 }
             });
             // per docs, step execution response includes the start date and execution arn
-            res.end(null, {
-                statusCode: 200,
-                body: JSON.stringify(
-                    {
-                        startDate: startDate,
-                        executionArn: exeArn,
-                    }),
-            });
+            res.writeHead(200, {'Content-Type': 'application/json'});
+         
+            res.end(JSON.stringify({
+                startDate: startDate,
+                executionArn: exeArn,
+            }));
         });
     }).listen(port, () => {
         log(`Running at http://127.0.0.1:${port}`);
