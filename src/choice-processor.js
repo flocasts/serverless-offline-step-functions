@@ -111,7 +111,7 @@ class ChoiceProcessor {
         }
 
         let inputValue = jsonPath({ json: data, path: choice.Variable})[0];
-        const choiceValue = choice[choiceComparator];
+        let choiceValue = choice[choiceComparator];
         if (choice[choiceComparator] === 'TimestampEquals' === 0) {
             choiceValue = (new Date(choiceValue)).getTime();
             inputValue = (new Date(inputValue)).getTime();
