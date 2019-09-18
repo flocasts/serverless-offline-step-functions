@@ -153,7 +153,7 @@ class StateMachineExecutor {
                 // TODO: catch, retry
                 // This will spin up a node child process to fire off the handler function of the given lambda
                 // the output of the lambda is placed into a JSON object with the outputKey generated above as
-                // the parent node and piped to stdout for processing. This is done so other callbacconsole.logs are not
+                // the parent node and piped to stdout for processing. This is done so other callback console.logs are not
                 // processed by this plugin.
                 // process.exit(0) must be called in .then because a child process will not exit if it has connected
                 // to another resource, such as a database or redis, which may be a source of future events.

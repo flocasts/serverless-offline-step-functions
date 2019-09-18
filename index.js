@@ -147,6 +147,8 @@ class ServerlessPlugin {
    * Solves the Lambda name for Fn::Get or ARN strings.
    */
   getLambdaName(resource) {
+    if(!resource) throw new Error(`No resource was provided`);
+
     const extractors = {
       static: this.serverless.providers.aws.naming.extractLambdaNameFromArn,
       dynamic: this.extractLambdaNameFromFunction,
