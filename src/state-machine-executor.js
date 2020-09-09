@@ -1,5 +1,7 @@
 const child_process = require('child_process');
-const _ = require('lodash');
+const assign = require('lodash.assign');
+const isEmpty = require('lodash.isempty');
+const isNaN = require('lodash.isnan');
 const fs = require('fs');
 const jsonPath = require('jsonpath');
 const choiceProcessor = require('./choice-processor');
@@ -14,11 +16,11 @@ class StateMachineExecutor {
         this.stateMachineName = stateMachineName;
         this.stateMachineJSON = {};
         if (stateMachineJSONInput) {
-            this.stateMachineJSON.stateMachines = _.assign({}, this.stateMachineJSON.stateMachines, stateMachineJSONInput);
+            this.stateMachineJSON.stateMachines = assign({}, this.stateMachineJSON.stateMachines, stateMachineJSONInput);
         } else {
             try{
                 const json = require('./step-functions.json');
-                if (!_.isEmpty(json)) {
+                if (!isEmpty(json)) {
                     this.stateMachineJSON = json;
                 }
             } catch(e) {
@@ -193,7 +195,7 @@ class StateMachineExecutor {
     buildWaitState(stateInfo, input) {
         let milliseconds;
         // SecondsPath: specified using a path from the state's input data.
-        if ((stateInfo.Seconds && _.isNaN(+stateInfo.Seconds))) {
+        if ((stateInfo.Seconds && isNaN(+stateInfo.Seconds))) {
             milliseconds = +stateInfo.Seconds * 1000
         } else if (stateInfo.SecondsPath && input) {
             milliseconds = +jsonPath.query(input, stateInfo.SecondsPath)[0] * 1000;
@@ -213,7 +215,7 @@ class StateMachineExecutor {
             }
         }
 
-        if (_.isNaN(milliseconds)) {
+        if (isNaN(milliseconds)) {
             return ''+ this.endStateMachine(
                 new StateRunTimeError('Specified wait time is not a number'), stateInfo);
         }

@@ -1,4 +1,5 @@
-const _ = require('lodash');
+const forEach = require('lodash.foreach');
+const filter = require('lodash.filter');
 const jsonPath = require('jsonpath');
 const StateMachineError = require('./state-machine-error');
 
@@ -32,7 +33,7 @@ class ChoiceProcessor {
         // Next field of the first Choice Rule in which the variable matches the
         // value according to the comparison operator
         // https://docs.aws.amazon.com/step-functions/latest/dg/amazon-states-language-choice-state.html
-        _.forEach(stateInfo.Choices, (choice) => {
+        forEach(stateInfo.Choices, (choice) => {
             const keys = Object.keys(choice);
             let choiceComparator = '';
             if (choice.Not) {
@@ -49,7 +50,7 @@ class ChoiceProcessor {
                     return false // short circuit forEach
                 }
             } else {
-                choiceComparator = _.filter(keys, key => key !== 'Variable' && key !== 'Next');
+                choiceComparator = filter(keys, key => key !== 'Variable' && key !== 'Next');
 
                 if (choiceComparator.length > 1) {
                     throw new StateMachineError('mulitple choice comparison keys found');
@@ -80,7 +81,7 @@ class ChoiceProcessor {
     evaluateAnd(comparisons) {
         let andResult = true;
         // choice will contain an array of choice rules
-        _.forEach(choice, (item) => {
+        forEach(choice, (item) => {
             const comparator = this.getChoiceComparator(choice);
             if (!this.processChoice(comparator, item, data)) {
                 // since this is an AND, if any item is false, the statement will be false
@@ -94,7 +95,7 @@ class ChoiceProcessor {
     evaluateOr(comparisons) {
         let orResult = false;
         // choice will contain an array of choice rules
-        _.forEach(choice, (item) => {
+        forEach(choice, (item) => {
             const comparator = this.getChoiceComparator(choice);
             if (this.processChoice(comparator, item, data)) {
                 // since this is an OR, if any item is true, the statement will be true
@@ -145,7 +146,7 @@ class ChoiceProcessor {
             case 'TimestampLessThanEquals':
                 return this.checkLTE(choiceValue, inputValue);
             case 'Not':
-                const name = _.filter(keys, key => key !== 'Variable' && key !== 'Next');
+                const name = filter(keys, key => key !== 'Variable' && key !== 'Next');
                 return !this.processChoice(name, choice, data);
         }
     }
@@ -172,7 +173,7 @@ class ChoiceProcessor {
 
     getChoiceComparator(choice) {
         const keys = Object.keys(choice);
-        choiceComparator = _.filter(keys, key => key !== 'Variable' && key !== 'Next');
+        choiceComparator = filter(keys, key => key !== 'Variable' && key !== 'Next');
 
         if (choiceComparator.length > 1) {
             throw new Error('mulitple choice comparison keys found');

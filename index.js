@@ -1,8 +1,7 @@
 'use strict';
 
-const _ = require('lodash');
+const forEach = require('lodash.foreach');
 const path = require('path');
-const Promise = require('bluebird');
 const fs = require('fs');
 const stateTypes = require('./src/state-types');
 const functionHelper = require('serverless-offline/src/functionHelper');
@@ -51,12 +50,12 @@ class ServerlessPlugin {
         return false;
     }
 
-    _.forEach(this.serverless.service.stepFunctions.stateMachines, (stateMachine, stateMachineName) => {
+    forEach(this.serverless.service.stepFunctions.stateMachines, (stateMachine, stateMachineName) => {
         if (typeof stateMachine.definition === 'undefined') {
             console.warn(`${this.logPrefix}: no 'definition' found for state machine ${stateMachineName}. Continuing to next state machine.`);
             return true;
         }
-        _.forEach(stateMachine.definition.States, (state, stateName) => {
+        forEach(stateMachine.definition.States, (state, stateName) => {
             if (state.Type === stateTypes.TASK) {
                 const servicePath = this.serverless.config.servicePath;
                 let lambdaName = this.getLambdaName(state.Resource);
@@ -90,7 +89,7 @@ class ServerlessPlugin {
 
                     // set the handler to the generic state machine handler function
                     lambdaFn.handler = path.join(this.handlersDirectory, 'state-machine-handler.run');
-                    _.forEach(lambdaFn.events, (event) => {
+                    forEach(lambdaFn.events, (event) => {
                         if (event.http) {
                             event.input = { stateName: stateMachine.definition.StartAt, stateMachine: stateMachineName };
                             event.http.integration = 'lambda';
