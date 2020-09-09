@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/flocasts/serverless-offline-step-functions#readme",
   "dependencies": {
+    "bluebird": "^3.7.2",
     "chalk": "^4.1.0",
     "jsonpath": "^1.0.2",
     "lodash.assign": "^4.2.0",
@@ -26,6 +27,6 @@
     "lodash.isnan": "^3.0.2",
     "lodash.last": "^3.0.0",
     "serverless": "^1.82.0",
-    "serverless-offline": "~6.7.0"
+    "serverless-offline": "~5.6.1"
   }
 }
