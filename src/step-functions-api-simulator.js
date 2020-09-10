@@ -1,7 +1,8 @@
 /* eslint-disable import/no-extraneous-dependencies */
 const http = require('http');
 const chalk = require('chalk');
-const _ = require('lodash');
+const last = require('lodash.last');
+const forEach = require('lodash.foreach');
 const StateMachineExecutor = require('./state-machine-executor');
 
 module.exports = (serverless) => {
@@ -26,10 +27,10 @@ module.exports = (serverless) => {
         });
         req.on('end', () => {
             const data = JSON.parse(dataJSON);
-            const machineName = _.last(data.stateMachineArn.split(':'));
+            const machineName = last(data.stateMachineArn.split(':'));
             let startDate = null;
             let exeArn = '';
-            _.forEach(serverless.service.stepFunctions.stateMachines, (machine, machineKey) => {
+            forEach(serverless.service.stepFunctions.stateMachines, (machine, machineKey) => {
                 if (machine.name === machineName) {
                     const currentState = machine.definition.States[machine.definition.StartAt];
                     const sme = new StateMachineExecutor(machineKey, machine.definition.StartAt, { [machineKey]: machine });

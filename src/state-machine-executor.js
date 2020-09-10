@@ -1,10 +1,13 @@
 const child_process = require('child_process');
-const _ = require('lodash');
+const assign = require('lodash.assign');
+const isEmpty = require('lodash.isempty');
+const isNaN = require('lodash.isnan');
 const fs = require('fs');
 const jsonPath = require('jsonpath');
 const choiceProcessor = require('./choice-processor');
 const stateTypes = require('./state-types');
 const StateRunTimeError = require('./state-machine-error');
+const path = require('path');
 
 const logPrefix = '[Serverless Offline Step Functions]:';
 
@@ -14,11 +17,11 @@ class StateMachineExecutor {
         this.stateMachineName = stateMachineName;
         this.stateMachineJSON = {};
         if (stateMachineJSONInput) {
-            this.stateMachineJSON.stateMachines = _.assign({}, this.stateMachineJSON.stateMachines, stateMachineJSONInput);
+            this.stateMachineJSON.stateMachines = assign({}, this.stateMachineJSON.stateMachines, stateMachineJSONInput);
         } else {
             try{
                 const json = require('./step-functions.json');
-                if (!_.isEmpty(json)) {
+                if (!isEmpty(json)) {
                     this.stateMachineJSON = json;
                 }
             } catch(e) {
@@ -160,8 +163,8 @@ class StateMachineExecutor {
                 const handlerSplit = stateInfo.handler.split('.');
                 // const cb = callback(null, { statusCode: 200, body: JSON.stringify({ startDate: sme.startDate, executionArn: sme.executionArn }) });
                 // const context = ;
-                let runner = `const context = require('${path.relative(process.cwd(), path.resolve(__dirname, '../node_modules/serverless-offline/src/createLambdaContext'))}')(require('${this.getWebpackOrCommonFuction(handlerSplit[0])}').${handlerSplit[1]}, ${callback}); `;
-                runner += `Promise.resolve(require("${this.getWebpackOrCommonFuction(handlerSplit[0])}").${handlerSplit[1]}(JSON.parse(process.env.input), context, ${callback}))`;
+                let runner = `const context = require('${path.relative(process.cwd(), path.resolve(__dirname, '../node_modules/serverless-offline/src/createLambdaContext'))}')(require('${this.getWebpackOrCommonFuction(handlerSplit[0].concat(handlerSplit[1]))}'), ${callback}); `;
+                runner += `Promise.resolve(require("${this.getWebpackOrCommonFuction(handlerSplit[0].concat(handlerSplit[1]))}")['${handlerSplit[2]}'](JSON.parse(process.env.input), context, ${callback}))`;
                 runner += `.then((data) => { console.log(JSON.stringify({ "${outputKey}": data || {} })); process.exit(0); })`;
                 runner += `.catch((e) => { console.error("${logPrefix} handler error:",e); })`;
                 return runner;
@@ -193,7 +196,7 @@ class StateMachineExecutor {
     buildWaitState(stateInfo, input) {
         let milliseconds;
         // SecondsPath: specified using a path from the state's input data.
-        if ((stateInfo.Seconds && _.isNaN(+stateInfo.Seconds))) {
+        if ((stateInfo.Seconds && isNaN(+stateInfo.Seconds))) {
             milliseconds = +stateInfo.Seconds * 1000
         } else if (stateInfo.SecondsPath && input) {
             milliseconds = +jsonPath.query(input, stateInfo.SecondsPath)[0] * 1000;
@@ -213,7 +216,7 @@ class StateMachineExecutor {
             }
         }
 
-        if (_.isNaN(milliseconds)) {
+        if (isNaN(milliseconds)) {
             return ''+ this.endStateMachine(
                 new StateRunTimeError('Specified wait time is not a number'), stateInfo);
         }
@@ -232,15 +235,17 @@ class StateMachineExecutor {
      * @param {*} stateInfo
      */
     processTaskInputPath(input, stateInfo) {
-        stateInfo.InputPath = typeof stateInfo.InputPath === 'undefined' ? '$' : stateInfo.InputPath;
-        if (stateInfo.InputPath === null) {
-            input = {};
+        stateInfo.InputPath = !stateInfo.InputPath ? '$' : stateInfo.InputPath;
+        
+        if (input) { 
+            input = typeof input === 'string' ? JSON.parse(input) : input;
         } else {
-            input = input ? input : {};
-            jsonPath.query(input, stateInfo.InputPath, (data) => {
-                input = Object.assign({}, data);
-            });
+            input = {};
         }
+
+        jsonPath.query(input, stateInfo.InputPath, (data) => {
+            input = Object.assign({}, data);
+        });
     }
 
     /**

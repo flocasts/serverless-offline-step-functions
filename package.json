@@ -1,6 +1,6 @@
 {
   "name": "serverless-offline-step-functions",
-  "version": "1.2.6",
+  "version": "1.3.0",
   "description": "plugin to support AWS step functions in Serverless",
   "main": "index.js",
   "scripts": {
@@ -18,11 +18,15 @@
   "homepage": "https://github.com/flocasts/serverless-offline-step-functions#readme",
   "dependencies": {
     "bluebird": "^3.7.2",
-    "chalk": "^4.0.0",
-    "http": "0.0.0",
+    "chalk": "^4.1.0",
     "jsonpath": "^1.0.2",
-    "lodash": ">=4.17.13",
-    "serverless": "^1.67.0",
+    "lodash.assign": "^4.2.0",
+    "lodash.filter": "^4.6.0",
+    "lodash.foreach": "^4.5.0",
+    "lodash.isempty": "^4.4.0",
+    "lodash.isnan": "^3.0.2",
+    "lodash.last": "^3.0.0",
+    "serverless": "^1.82.0",
     "serverless-offline": "~5.6.1"
   }
 }

@@ -1,11 +1,10 @@
 'use strict';
 
-const _ = require('lodash');
+const forEach = require('lodash.foreach');
 const path = require('path');
-const Promise = require('bluebird');
 const fs = require('fs');
 const stateTypes = require('./src/state-types');
-const functionHelper = require('serverless-offline/src/functionHelper');
+const Promise = require('bluebird')
 
 class ServerlessPlugin {
   constructor(serverless, options) {
@@ -17,19 +16,20 @@ class ServerlessPlugin {
 
     this.hooks = {
         'before:offline:start:init': () => require('./src/step-functions-api-simulator.js')(this.serverless),
-        'offline:start:init': () =>
-            Promise.bind(this)
-            .then(this.parseYaml)
-            // TODO: validate state names
-            // State machine, execution, and activity names must be 1–80 characters in length,
-            // must be unique for your account and region, and must not contain any of the following:
-            // - Whitespace
-            // - Wildcard characters (? *)
-            // - Bracket characters (< > { } [ ])
-            // - Special characters (: ; , \ | ^ ~ $ # % & ` ")
-            // - Control characters (\\u0000 - \\u001f or \\u007f - \\u009f).
-            .then(this.createEndpoints)
-            .then(this.createStepFunctionsJSON),
+        'offline:start:init': () => {
+            return Promise.bind(this)
+                .then(this.parseYaml)
+                // TODO: validate state names
+                // State machine, execution, and activity names must be 1–80 characters in length,
+                // must be unique for your account and region, and must not contain any of the following:
+                // - Whitespace
+                // - Wildcard characters (? *)
+                // - Bracket characters (< > { } [ ])
+                // - Special characters (: ; , \ | ^ ~ $ # % & ` ")
+                // - Control characters (\\u0000 - \\u001f or \\u007f - \\u009f).
+                .then(this.createEndpoints)
+                .then(this.createStepFunctionsJSON)
+        }
     };
   }
 
@@ -51,12 +51,12 @@ class ServerlessPlugin {
         return false;
     }
 
-    _.forEach(this.serverless.service.stepFunctions.stateMachines, (stateMachine, stateMachineName) => {
+    forEach(this.serverless.service.stepFunctions.stateMachines, (stateMachine, stateMachineName) => {
         if (typeof stateMachine.definition === 'undefined') {
             console.warn(`${this.logPrefix}: no 'definition' found for state machine ${stateMachineName}. Continuing to next state machine.`);
             return true;
         }
-        _.forEach(stateMachine.definition.States, (state, stateName) => {
+        forEach(stateMachine.definition.States, (state, stateName) => {
             if (state.Type === stateTypes.TASK) {
                 const servicePath = this.serverless.config.servicePath;
                 let lambdaName = this.getLambdaName(state.Resource);
@@ -76,7 +76,6 @@ class ServerlessPlugin {
                 }
 
                 const lambdaFn = this.service.getFunction(lambdaName);
-                const lamdaOpts = functionHelper.getFunctionOptions(lambdaFn, lambdaName, servicePath);
 
                 state.handler = functions[lambdaName].handler;
                 if (stateName === stateMachine.definition.StartAt) {
@@ -90,7 +89,7 @@ class ServerlessPlugin {
 
                     // set the handler to the generic state machine handler function
                     lambdaFn.handler = path.join(this.handlersDirectory, 'state-machine-handler.run');
-                    _.forEach(lambdaFn.events, (event) => {
+                    forEach(lambdaFn.events, (event) => {
                         if (event.http) {
                             event.input = { stateName: stateMachine.definition.StartAt, stateMachine: stateMachineName };
                             event.http.integration = 'lambda';
